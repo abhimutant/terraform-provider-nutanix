@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -412,8 +413,6 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 }
 
 func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Create FC Image: %s", d.Get("name").(string))
-
 	// Get client connection
 	conn := meta.(*Client).FC
 	req := fc.CreateClusterInput{}
@@ -470,6 +469,26 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	req.HypervisorIsoDetails = expandHyperVisorIsoDetails(d)
 	req.NodesList = expandNodesList(d)
 
+	// Poll for operation here - Node Detail GET Call
+	for _, vv := range req.NodesList {
+		stateConfig := &resource.StateChangeConf{
+			Pending: []string{"STATE_DISCOVERING", "STATE_UNAVAILABLE"},
+			Target:  []string{"STATE_AVAILABLE"},
+			Refresh: foundationCentralPollingNode(ctx, conn, *vv.ImagedNodeUUID),
+			Timeout: 30 * time.Minute,
+			Delay:   1 * time.Minute,
+		}
+		infos, err := stateConfig.WaitForStateContext(ctx)
+		if err != nil {
+			return diag.Errorf("error waiting for node (%s) to be available: %v", *vv.ImagedNodeUUID, err)
+		}
+		if progress, ok := infos.(*fc.ImagedNodeDetails); ok {
+			if !(*progress.Available) {
+				return diag.Errorf("Node is not available to image or alraedy be a part of cluster")
+			}
+		}
+	}
+
 	//Make request to the API
 	resp, err := conn.Service.CreateCluster(ctx, &req)
 	if err != nil {
@@ -510,4 +529,20 @@ func resourceNutanixFCImageClusterUpdate(ctx context.Context, d *schema.Resource
 
 func resourceNutanixFCImageClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
+}
+
+func foundationCentralPollingNode(ctx context.Context, conn *fc.Client, imageUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		log.Printf("[DEBUG] Polling Node to be Available: %s", imageUUID)
+		v, err := conn.Service.GetImagedNode(ctx, imageUUID)
+		if err != nil {
+			return nil, "STATE_UNAVAILABLE", err
+		}
+
+		if *v.NodeState == "STATE_UNAVAILABLE" || *v.NodeState == "STATE_DISCOVERING" {
+			return v, *v.NodeState,
+				fmt.Errorf("node_availability: %v, node_state: %s", (*v.Available), (*v.NodeState))
+		}
+		return v, "STATE_AVAILABLE", nil
+	}
 }
