@@ -42,6 +42,12 @@ variable "cluster_size"{
     default = 0
 }
 
+//[Optional]: 
+variable "skip_cluster_creation"{
+    description= "Skip cluster creation"
+    type = bool
+    default = false
+}
 //[Optional]: Sha256sum of AOS package.
 variable "aos_package_sha256sum"{
     description = "Sha256sum of AOS package"
@@ -71,10 +77,10 @@ variable "common_network_settings"{
 variable "hypervisor_iso_details"{
     description = "Details of the hypervisor iso"
     type = object({
-        hyperv_sku = string
-        url = optional(string)
-        hyperv_product_key = string
-        sha256sum =string
+        hyperv_sku = optional(string)
+        url = string
+        hyperv_product_key = optional(string)
+        sha256sum =optional(string)
     })
     default = null
 }

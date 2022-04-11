@@ -935,7 +935,7 @@ func collectIndividualErrorDiagnosticsFC(progress *fc.ImagedClusterDetails) diag
 			}
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Cluster creation for Cluster : %s failed with error:  %s.", *cpd.ClusterName, *cpd.Status),
+				Summary:  fmt.Sprintf("Cluster creation for Cluster : %s failed with error:  %s.", *progress.ClusterName, *cpd.Status),
 				Detail:   message,
 			})
 		}

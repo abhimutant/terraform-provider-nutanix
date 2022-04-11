@@ -35,6 +35,7 @@ resource "nutanix_foundation_central_image_cluster" "this"{
     aos_package_sha256sum = var.aos_package_sha256sum
     timezone = var.timezone
     cluster_external_ip = var.cluster_external_ip
+    skip_cluster_creation = var.skip_cluster_creation
 
 
     // define common network setting as input given in module
