@@ -1,17 +1,17 @@
-// resources/datasources used in this file were introduced in nutanix/nutanix version 1.5.0-beta
-terraform{
-    required_providers{
-        nutanix = {
-            source = "nutanixtemp/nutanix"
-            version = "1.99.99"
-        }
+// resources/datasources used in this file were introduced in nutanix/nutanix version 1.5.0-beta.2
+terraform {
+    required_providers {
+      nutanix = {
+          source = "nutanix/nutanix"
+          version = ">1.5.0-beta.2"
+      }
     }
 }
 
 provider "nutanix" {
-    username  = "admin"
-    password  = "Nutanix.123"
-    endpoint  = "10.2.242.13"
+    username  = "user"
+    password  = "pass"
+    endpoint  = "10.x.xx.xx"
     insecure  = true
     port      = 9440
 }

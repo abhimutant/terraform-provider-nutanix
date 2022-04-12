@@ -1,5 +1,3 @@
-
-
-output "cns"{
-    value = var.common_network_settings
-}
+output "cls"{
+    value = resource.nutanix_foundation_central_image_cluster.this
+}   
